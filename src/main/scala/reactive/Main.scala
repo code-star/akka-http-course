@@ -8,6 +8,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.javadsl.server.values.Headers
+import akka.http.scaladsl.model.ContentType
+import akka.http.scaladsl.model.MediaType
 
 object Main extends App {
   implicit val system = ActorSystem("hello-api")
@@ -18,10 +22,26 @@ object Main extends App {
   val serverBinding = Http().bindAndHandle(interface = "0.0.0.0", port = 8080, handler = mainFlow)
 
   def mainFlow(implicit system: ActorSystem, timeout: Timeout, executor: ExecutionContext): Route = {
-    get {
-      complete {
-        "Hello World!"
+    path("noHello") {
+      get {
+        complete {
+          "Hello No!"
+        }
       }
-    }
+    } ~
+      get {
+        headerValueByName("IsCool") {
+          case "true" => complete { "Your request is cool!" }
+          case _      => reject
+        } ~
+          complete {
+            "Hello World!"
+          }
+      } ~
+      post {
+        complete {
+          "Hello World! - Post"
+        }
+      }
   }
 }
